@@ -48,10 +48,10 @@ module.exports = {
         SELECT json_build_object(${streamNames.map(name => `'${name}', ${name}`).join(',')})
         FROM returned_data;`
     },
-    getStreams: activityID => {
+    getStreams: (activityID, athleteID) => {
         const streamNames = ['time','distance','altitude','velocity_smooth','heartrate','cadence','watts','temp','moving','grade_smooth']
         return `SELECT json_build_object(${streamNames.map(name => `'${name}', ${name}`).join(',')})
-        FROM (SELECT * FROM streams) row WHERE id=${activityID};`
+        FROM (SELECT * FROM streams) row WHERE id=${activityID} AND athlete_id=${athleteID};`
     },
     createTable: tableName => (`CREATE TABLE ${tableName} (${dbTables[tableName].map(
         column => (`${column.name} ${column.type}${column.maxLength ? ` varying(${column.maxLength})` : ''}`)).join(', ')});`)

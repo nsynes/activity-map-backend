@@ -15,6 +15,7 @@ const authRouter = require('./routes/auth');
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', true);
 
 app.use(session({
     secret: process.env.SESSION_SECRET,

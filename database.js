@@ -26,11 +26,11 @@ const addStreams = (activityID, athleteID, streams) => {
     })
 }
 
-const getStreams = (activityID) => {
+const getStreams = (activityID, athleteID) => {
     return new Promise((resolve, reject) => { // NEED TO ADD reject HANDLER
         var client = new Client(conString);
         client.connect();
-        client.query(new Query(dbInfo.getStreams(activityID)), (err, result) => {
+        client.query(new Query(dbInfo.getStreams(activityID, athleteID)), (err, result) => {
             if ( err ) console.log(err);
             client.end();
             const streams = result && result.rows[0] && result.rows[0].json_build_object ? result.rows[0].json_build_object : {};

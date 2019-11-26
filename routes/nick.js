@@ -14,5 +14,11 @@ router.get('/getActivities', (req, res) => {
     })
 })
 
+router.get('/getStreams/:activityID', (req, res) => {
+    const { activityID } = req.params;
+    db.getStreams(activityID, nickID).then(dbStreams => {
+        res.json(dbStreams)
+    })
+})
 
 module.exports = router;

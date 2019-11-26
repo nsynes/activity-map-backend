@@ -5,6 +5,8 @@ var strava = require('strava-v3');
 const StravaStrategy = require('passport-strava-oauth2').Strategy
 const dotenv = require('dotenv');
 
+const config = require('../env-config.js')
+
 const db = require('../database');
 
 
@@ -26,7 +28,7 @@ passport.deserializeUser(function(obj, done) {
 passport.use(new StravaStrategy({
     clientID: process.env.STRAVA_CLIENT_ID,
     clientSecret: process.env.STRAVA_CLIENT_SECRET,
-    callbackURL: 'http://localhost:3001/auth/strava/callback'
+    callbackURL: `${config.API_Domain}/auth/strava/callback`
   },
   // the 'verify callback'
   // typical purpose to find the user that possesses a set of credentials
@@ -54,7 +56,7 @@ router.get('/strava', passport.authenticate('strava', { scope: ['activity:read']
 router.get('/strava/callback',
     passport.authenticate('strava', { failureRedirect: '/login' }),
     function(req, res) {
-        res.redirect(`http://localhost:3000/StravaActivities`);
+        res.redirect(`${config.APP_Domain}/StravaActivities`);
     }
 );
 
@@ -70,7 +72,7 @@ router.get('/StravaPhoto', ensureAuthenticated, function(req, res){
 router.get('/logout', function(req, res){
   req.logout();
   res.cookie('connect.sid', '', { expires: new Date() });
-  res.redirect(`http://localhost:3000`);
+  res.redirect(`${config.APP_Domain}`);
 });
 
 
@@ -115,7 +117,7 @@ router.use(function(err, req, res, next) {
 function ensureAuthenticated(req, res, next) {
     //console.log('ensureAuthenticated?', req.isAuthenticated())
     if (req.isAuthenticated()) { return next(); }
-    res.redirect('http://localhost:3001/auth/strava')
+    res.redirect(`${config.API_Domain}/auth/strava`)
 }
 
 
@@ -127,7 +129,7 @@ var getActivity = (id, token) => {
 
 var getStreams = (activityID, athleteID, token, res) => {
 
-    db.getStreams(activityID).then(dbStreams => {
+    db.getStreams(activityID, athleteID).then(dbStreams => {
         if ( Object.keys(dbStreams).length === 0 ) {
             const keys = ['time', 'latlng', 'distance', 'altitude', 'velocity_smooth', 'heartrate', 'cadence', 'watts', 'temp', 'moving', 'grade_smooth']
             strava.streams.activity({ id: activityID, access_token: token, resolution: 'high', types: keys }, function(err, payload, limits) {

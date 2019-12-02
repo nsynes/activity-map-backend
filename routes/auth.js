@@ -5,12 +5,12 @@ var strava = require('strava-v3');
 const StravaStrategy = require('passport-strava-oauth2').Strategy
 const dotenv = require('dotenv');
 
-const config = require('../env-config.js')
-
 const db = require('../database');
 
 
 dotenv.config();
+
+const envConfig = require('../env-config.js')
 
 
 var router = express.Router();
@@ -24,11 +24,10 @@ passport.deserializeUser(function(obj, done) {
     //console.log('desearilizeUser', obj)
     done(null, obj)
 });
-
 passport.use(new StravaStrategy({
     clientID: process.env.STRAVA_CLIENT_ID,
     clientSecret: process.env.STRAVA_CLIENT_SECRET,
-    callbackURL: `${config.API_Domain}/auth/strava/callback`
+    callbackURL: `${envConfig.API_Domain}/auth/strava/callback`
   },
   // the 'verify callback'
   // typical purpose to find the user that possesses a set of credentials
@@ -56,7 +55,7 @@ router.get('/strava', passport.authenticate('strava', { scope: ['activity:read']
 router.get('/strava/callback',
     passport.authenticate('strava', { failureRedirect: '/login' }),
     function(req, res) {
-        res.redirect(`${config.APP_Domain}/StravaActivities`);
+        res.redirect(`${envConfig.APP_Domain}/StravaActivities`);
     }
 );
 
@@ -72,7 +71,7 @@ router.get('/StravaPhoto', ensureAuthenticated, function(req, res){
 router.get('/logout', function(req, res){
   req.logout();
   res.cookie('connect.sid', '', { expires: new Date() });
-  res.redirect(`${config.APP_Domain}`);
+  res.redirect(`${envConfig.APP_Domain}`);
 });
 
 
@@ -93,6 +92,20 @@ router.get('/getStreams/:activityID', ensureAuthenticated, (req, res) => {
     const { activityID } = req.params;
     const { token, id } = req.user;
     getStreams(activityID, id, token, res)
+})
+
+router.get('/getActivity/:activityID', ensureAuthenticated, (req, res) => {
+    const { activityID } = req.params;
+    const { token, id } = req.user;
+    console.log('getActivity route', activityID)
+    getActivity(activityID, token, res)
+})
+
+router.get('/getActivityPhotos/:activityID', ensureAuthenticated, (req, res) => {
+    const { activityID } = req.params;
+    const { token, id } = req.user;
+    console.log('getActivityPhotos route', activityID)
+    getActivityPhotos(activityID, token, res)
 })
 
 // catch 404 and forward to error handler
@@ -117,13 +130,20 @@ router.use(function(err, req, res, next) {
 function ensureAuthenticated(req, res, next) {
     //console.log('ensureAuthenticated?', req.isAuthenticated())
     if (req.isAuthenticated()) { return next(); }
-    res.redirect(`${config.API_Domain}/auth/strava`)
+    res.redirect(`${envConfig.API_Domain}/auth/strava`)
 }
 
+var getActivityPhotos = (id, token, res) => {
+    console.log('getActivityPhotos function')
+    strava.activities.listPhotos({ id: id, 'access_token': token, size: 600 },function(err, payload) {
+        res.json(payload)
+    })
+}
 
-var getActivity = (id, token) => {
+var getActivity = (id, token, res) => {
+    console.log('getActivity function')
     strava.activities.get({ id: id, 'access_token': token },function(err, payload) {
-        //console.log('payload',payload)
+        res.json(payload)
     })
 }
 
